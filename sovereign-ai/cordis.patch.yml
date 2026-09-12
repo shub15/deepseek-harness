@@ -1,0 +1,25 @@
+# sovereign-ai/cordis.patch.yml
+#
+# Applied as ONE insert over the profile root when the user runs:
+#   dsh plugin --profile sovereign add ./sovereign-ai
+#
+# Row order carries no load semantics (activation is service-availability
+# driven). Later bundle patches and the user's profile cordis.patch.yml can
+# override these rows by id, with the last write winning per row.
+#
+#   sovereign-llm-local    - local OpenAI-compatible model adapters
+#   sovereign-tool-ocr     - OCR / document extraction tool  (Phase 3)
+#   sovereign-tool-rag     - local RAG tool                  (Phase 3)
+#   sovereign-monitor      - sovereignty + network monitor   (Phase 4)
+#   sovereign-client-ui    - Web UI badge + panel            (Phase 5)
+#
+# Phase 1: skeleton only - one status-command row proves the bundle loads.
+
+- insert:
+    - id: sovereign-status
+      name: "@sovereign-ai/dsh-plugin"
+      inject: [commands, llm]
+      config:
+        version: "0.1.0"
+        mode: "development"
+        localModels: []

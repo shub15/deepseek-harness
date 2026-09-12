@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noImplicitAny": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "lib",
+    "declarationDir": "lib/types",
+    "rootDir": "src",
+    "baseUrl": "..",
+    "paths": {
+      "@deepseek-ai/cordis": ["vendor/cordis/lib/types/index.d.ts"],
+      "@deepseek-ai/schemastery": ["vendor/schemastery/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-brand": ["packages/util/brand/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-llm": ["packages/llm/llm/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-tools": ["packages/core/tools/lib/types/index.d.ts"]
+    },
+    "skipLibCheck": true,
+    "types": ["node"],
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["src/index.ts"]
+}
