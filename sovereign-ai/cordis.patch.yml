@@ -18,8 +18,11 @@
 - insert:
     - id: sovereign-status
       name: "@sovereign-ai/dsh-plugin"
-      inject: [commands, llm]
+      inject: [commands, llm, tools]
       config:
         version: "0.1.0"
         mode: "development"
         localModels: []
+    - id: sovereign-client-ui
+      name: "@sovereign-ai/dsh-plugin"
+      inject: [slots, sessions, locale]

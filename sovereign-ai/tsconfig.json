@@ -19,7 +19,8 @@
       "@deepseek-ai/schemastery": ["vendor/schemastery/lib/types/index.d.ts"],
       "@deepseek-ai/dsh-brand": ["packages/util/brand/lib/types/index.d.ts"],
       "@deepseek-ai/dsh-llm": ["packages/llm/llm/lib/types/index.d.ts"],
-      "@deepseek-ai/dsh-tools": ["packages/core/tools/lib/types/index.d.ts"]
+      "@deepseek-ai/dsh-tools": ["packages/core/tools/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-session": ["packages/core/session/lib/types/index.d.ts"]
     },
     "skipLibCheck": true,
     "types": ["node"],

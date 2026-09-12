@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Context } from "@deepseek-ai/cordis";
 import { defineTool } from "@deepseek-ai/dsh-tools";
+import type { SovereigntyMonitor } from "./sovereignty.js";
 
 export interface RagConfig {
   knowledgeBaseDirectory: string;
@@ -12,6 +13,7 @@ export interface RagConfig {
   chunkSize?: number;
   chunkOverlap?: number;
   resultLimit?: number;
+  requestMonitor?: SovereigntyMonitor;
 }
 
 export interface RagSource {
@@ -43,7 +45,10 @@ const DEFAULT_CHUNK_SIZE = 800;
 const DEFAULT_CHUNK_OVERLAP = 120;
 const DEFAULT_RESULT_LIMIT = 5;
 
-function validateConfig(config: RagConfig): Required<RagConfig> {
+type ResolvedRagConfig = Omit<Required<RagConfig>, "requestMonitor"> &
+  Pick<RagConfig, "requestMonitor">;
+
+function validateConfig(config: RagConfig): ResolvedRagConfig {
   const knowledgeBaseDirectory = resolve(config.knowledgeBaseDirectory);
   const databasePath = resolve(config.databasePath);
   let url: URL;
@@ -134,7 +139,9 @@ async function embed(
   baseUrl: string,
   model: string,
   input: string,
+  monitor?: SovereigntyMonitor,
 ): Promise<number[]> {
+  monitor?.request(`${baseUrl}/embeddings`, "embedding");
   const response = await fetch(`${baseUrl}/embeddings`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -216,6 +223,7 @@ export function createRagService(rawConfig: RagConfig): RagService {
               config.embeddingBaseUrl,
               config.embeddingModel,
               text,
+              config.requestMonitor,
             ),
           });
         }
@@ -250,6 +258,7 @@ export function createRagService(rawConfig: RagConfig): RagService {
         config.embeddingBaseUrl,
         config.embeddingModel,
         query,
+        config.requestMonitor,
       );
       const rows = database
         .prepare(

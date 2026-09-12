@@ -38,9 +38,9 @@ describe("sovereign-ai plugin skeleton", () => {
 
     apply(ctx, { version: "0.2.0", mode: "demo" });
 
-    expect(registered?.name).toBe("sovereign-status");
+    expect(registered?.name).toBe("sovereignty-status");
     expect(registered?.description).toBe(
-      "show Sovereign AI plugin load status",
+      "show application-observed Sovereign network status",
     );
     expect(registered?.recordInput).toBe(false);
     expect(registered?.handler({ rawInput: "" })).toEqual({

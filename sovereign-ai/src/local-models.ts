@@ -9,6 +9,7 @@ import type {
   TokenUsage,
   ToolCallId,
 } from "@deepseek-ai/dsh-llm";
+import type { SovereigntyMonitor } from "./sovereignty.js";
 
 export interface LocalModelEndpoint {
   id: string;
@@ -317,7 +318,10 @@ async function* translate(response: Response): AsyncGenerator<StreamChunk> {
 }
 
 export class LocalOpenAiAdapter extends LlmAdapter {
-  constructor(private readonly endpoint: LocalModelEndpoint) {
+  constructor(
+    private readonly endpoint: LocalModelEndpoint,
+    private readonly monitor?: SovereigntyMonitor,
+  ) {
     super();
   }
 
@@ -396,6 +400,10 @@ export class LocalOpenAiAdapter extends LlmAdapter {
     };
     if (this.endpoint.apiKey !== undefined)
       headers.authorization = `Bearer ${this.endpoint.apiKey}`;
+    this.monitor?.request(
+      `${this.endpoint.baseUrl.replace(/\/$/, "")}/chat/completions`,
+      "local-model",
+    );
     const response = await fetch(
       `${this.endpoint.baseUrl.replace(/\/$/, "")}/chat/completions`,
       {

@@ -16,6 +16,14 @@ import { registerDocumentTools } from "./document-tools.js";
 import type { DocumentToolsConfig } from "./document-tools.js";
 import { registerArtifactTools } from "./artifact-tools.js";
 import type { ArtifactToolsConfig } from "./artifact-tools.js";
+import {
+  createSovereigntyMonitor,
+  installSovereigntyMonitor,
+  renderSovereigntyStatus,
+} from "./sovereignty.js";
+import type { SovereigntyMonitor } from "./sovereignty.js";
+import { createAuditTrace, installAuditTrace } from "./audit.js";
+import type { AuditConfig } from "./audit.js";
 
 export const name = "sovereign-ai";
 export const inject = ["commands", "llm", "tools"];
@@ -60,6 +68,8 @@ export interface Config {
   documentTools?: DocumentToolsConfig;
   /** Workspace-safe local office artifact output configuration. */
   artifactTools?: ArtifactToolsConfig;
+  /** Local compact audit trace configuration. */
+  audit?: AuditConfig;
 }
 
 /** Schemastery configuration for the initial Sovereign AI plugin row. */
@@ -98,6 +108,10 @@ export const Config: z<Config> = z.object({
     workspaceDirectory: z.string(),
     outputDirectory: z.string(),
   }),
+  audit: z.object({
+    path: z.string(),
+    maxEntries: z.number().step(1).min(1),
+  }),
 });
 
 interface ResolvedConfig {
@@ -107,6 +121,7 @@ interface ResolvedConfig {
   readonly rag?: RagConfig;
   readonly documentTools?: DocumentToolsConfig;
   readonly artifactTools?: ArtifactToolsConfig;
+  readonly audit?: AuditConfig;
 }
 
 /** Validate direct `apply()` calls that bypass Loader Schemastery normalization. */
@@ -128,6 +143,7 @@ export function resolveConfig(config: Config): ResolvedConfig {
     ...(config.artifactTools === undefined
       ? {}
       : { artifactTools: config.artifactTools }),
+    ...(config.audit === undefined ? {} : { audit: config.audit }),
   };
 }
 
@@ -222,6 +238,7 @@ export function renderStatus(config: Config): string {
 /** Register `/sovereign-status`, proving the out-of-tree plugin row loaded. */
 export function apply(ctx: CommandContext, config: Config): void {
   const resolved = resolveConfig(config);
+  const audit = createAuditTrace(resolved.audit);
   ctx.commands.register({
     name: "sovereign-status",
     description: "show Sovereign AI plugin load status",
@@ -229,6 +246,35 @@ export function apply(ctx: CommandContext, config: Config): void {
     handler: (): CommandResult => ({
       kind: "success",
       text: renderStatus(resolved),
+    }),
+  });
+  const monitor = createSovereigntyMonitor(
+    [
+      ...resolved.localModels.map((endpoint) => endpoint.baseUrl),
+      ...(resolved.rag === undefined ? [] : [resolved.rag.embeddingBaseUrl]),
+    ],
+    (url, kind) => ctx.emit("sovereign/network-blocked", url, kind),
+  );
+  installAuditTrace(ctx, audit, monitor);
+  if ("provide" in ctx && typeof ctx.provide === "function") {
+    installSovereigntyMonitor(ctx, monitor);
+  }
+  ctx.commands.register({
+    name: "sovereignty-status",
+    description: "show application-observed Sovereign network status",
+    recordInput: false,
+    handler: (): CommandResult => ({
+      kind: "success",
+      text: renderSovereigntyStatus(monitor.status()),
+    }),
+  });
+  ctx.commands.register({
+    name: "sovereignty-audit",
+    description: "show the local read-only Sovereign audit trace",
+    recordInput: false,
+    handler: (): CommandResult => ({
+      kind: "success",
+      text: JSON.stringify(audit.list()),
     }),
   });
   const llm = (
@@ -244,16 +290,19 @@ export function apply(ctx: CommandContext, config: Config): void {
   for (const endpoint of resolved.localModels) {
     llm.registerAdapter(
       [`sovereign-local-${endpoint.id}`],
-      new LocalOpenAiAdapter(endpoint),
+      new LocalOpenAiAdapter(endpoint, monitor),
     );
   }
   installRouting(ctx, createRoutingService(resolved.localModels));
   if (resolved.rag !== undefined) {
-    registerRagTool(ctx, createRagService(resolved.rag));
+    registerRagTool(
+      ctx,
+      createRagService({ ...resolved.rag, requestMonitor: monitor }),
+    );
   }
-    if ("tools" in ctx && ctx.tools !== undefined) {
-      registerDocumentTools(ctx, resolved.documentTools);
-    }
+  if ("tools" in ctx && ctx.tools !== undefined) {
+    registerDocumentTools(ctx, resolved.documentTools);
+  }
   if ("tools" in ctx && ctx.tools !== undefined) {
     registerArtifactTools(ctx, resolved.artifactTools);
   }
@@ -278,6 +327,14 @@ export {
   createArtifactTools,
   registerArtifactTools,
 } from "./artifact-tools.js";
+export {
+  createSovereigntyMonitor,
+  installSovereigntyMonitor,
+  renderSovereigntyStatus,
+} from "./sovereignty.js";
+export type { SovereigntyMonitor, SovereigntyStatus } from "./sovereignty.js";
+export { createAuditTrace, installAuditTrace } from "./audit.js";
+export type { AuditConfig, AuditEntry, AuditTraceService } from "./audit.js";
 export type {
   ArtifactMetadata,
   ArtifactToolsConfig,
