@@ -46,6 +46,9 @@
   },
   "dependencies": {
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@deepseek-ai/schemastery": "workspace:^",
+    "docx": "^9.7.1",
+    "exceljs": "^4.4.0",
+    "pptxgenjs": "^4.0.1"
   }
 }

@@ -12,6 +12,10 @@ import type { LocalModelEndpoint } from "./local-models.js";
 import { createRoutingService, installRouting } from "./routing.js";
 import { createRagService, registerRagTool } from "./rag.js";
 import type { RagConfig } from "./rag.js";
+import { registerDocumentTools } from "./document-tools.js";
+import type { DocumentToolsConfig } from "./document-tools.js";
+import { registerArtifactTools } from "./artifact-tools.js";
+import type { ArtifactToolsConfig } from "./artifact-tools.js";
 
 export const name = "sovereign-ai";
 export const inject = ["commands", "llm", "tools"];
@@ -52,6 +56,10 @@ export interface Config {
   localModels?: LocalModelEndpoint[];
   /** Local knowledge base and local embedding endpoint configuration. */
   rag?: RagConfig;
+  /** Local PDF/text inspection and offline OCR configuration. */
+  documentTools?: DocumentToolsConfig;
+  /** Workspace-safe local office artifact output configuration. */
+  artifactTools?: ArtifactToolsConfig;
 }
 
 /** Schemastery configuration for the initial Sovereign AI plugin row. */
@@ -81,6 +89,15 @@ export const Config: z<Config> = z.object({
     chunkOverlap: z.number().step(1).min(0),
     resultLimit: z.number().step(1).min(1),
   }),
+  documentTools: z.object({
+    ocrCommand: z.string(),
+    maxPages: z.number().step(1).min(1),
+    maxCharacters: z.number().step(1).min(1),
+  }),
+  artifactTools: z.object({
+    workspaceDirectory: z.string(),
+    outputDirectory: z.string(),
+  }),
 });
 
 interface ResolvedConfig {
@@ -88,6 +105,8 @@ interface ResolvedConfig {
   readonly mode: string;
   readonly localModels: LocalModelEndpoint[];
   readonly rag?: RagConfig;
+  readonly documentTools?: DocumentToolsConfig;
+  readonly artifactTools?: ArtifactToolsConfig;
 }
 
 /** Validate direct `apply()` calls that bypass Loader Schemastery normalization. */
@@ -103,6 +122,12 @@ export function resolveConfig(config: Config): ResolvedConfig {
     mode,
     localModels: resolveLocalModels(config.localModels),
     ...(config.rag === undefined ? {} : { rag: config.rag }),
+    ...(config.documentTools === undefined
+      ? {}
+      : { documentTools: config.documentTools }),
+    ...(config.artifactTools === undefined
+      ? {}
+      : { artifactTools: config.artifactTools }),
   };
 }
 
@@ -226,12 +251,40 @@ export function apply(ctx: CommandContext, config: Config): void {
   if (resolved.rag !== undefined) {
     registerRagTool(ctx, createRagService(resolved.rag));
   }
+    if ("tools" in ctx && ctx.tools !== undefined) {
+      registerDocumentTools(ctx, resolved.documentTools);
+    }
+  if ("tools" in ctx && ctx.tools !== undefined) {
+    registerArtifactTools(ctx, resolved.artifactTools);
+  }
 }
 
 export { LocalOpenAiAdapter, routeFor } from "./local-models.js";
 export type { LocalModelEndpoint, LocalModelsConfig } from "./local-models.js";
 export { createRagService, registerRagTool } from "./rag.js";
 export type { RagConfig, RagResult, RagService, RagSource } from "./rag.js";
+export {
+  createDocumentTools,
+  registerDocumentTools,
+} from "./document-tools.js";
+export type {
+  DocumentInspection,
+  DocumentPage,
+  DocumentTable,
+  DocumentTextResult,
+  DocumentToolsConfig,
+} from "./document-tools.js";
+export {
+  createArtifactTools,
+  registerArtifactTools,
+} from "./artifact-tools.js";
+export type {
+  ArtifactMetadata,
+  ArtifactToolsConfig,
+  CreateDocxInput,
+  CreatePptxInput,
+  CreateXlsxInput,
+} from "./artifact-tools.js";
 export {
   classifyTask,
   createRoutingService,
