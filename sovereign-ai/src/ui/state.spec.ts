@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveSovereignUiState } from "./client-state.ts";
+import { deriveSovereignUiState } from "./state.ts";
 
 describe("Sovereign client state", () => {
   it("derives model, trace, and artifact state from durable events", () => {

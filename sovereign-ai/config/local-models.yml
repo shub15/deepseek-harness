@@ -1,0 +1,22 @@
+# Local OpenAI-compatible endpoints used by cordis.patch.yml.
+# Start these services locally before running the profile.
+localModels:
+  - id: coding
+    baseUrl: http://127.0.0.1:8000/v1
+    model: local-coding
+    capabilities: [coding, general]
+    priority: 20
+  - id: reasoning-document
+    baseUrl: http://127.0.0.1:8001/v1
+    model: local-reasoning-document
+    capabilities: [reasoning, document, long_context, general]
+    priority: 20
+  - id: vision
+    baseUrl: http://127.0.0.1:8002/v1
+    model: local-vision
+    capabilities: [vision, general]
+    priority: 10
+    available: true
+embedding:
+  baseUrl: http://127.0.0.1:8001/v1
+  model: local-embedding

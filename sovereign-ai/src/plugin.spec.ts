@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { apply, renderStatus, resolveConfig } from "./index.ts";
-import { routeFor, LocalOpenAiAdapter } from "./index.ts";
+import { apply, renderStatus, resolveConfig } from "./plugin.ts";
+import { routeFor, LocalOpenAiAdapter } from "./plugin.ts";
 import { createUserMessage } from "@deepseek-ai/dsh-llm";
 import type { GenerateOptions } from "@deepseek-ai/dsh-llm";
-import { classifyTask, createRoutingService, installRouting } from "./index.ts";
+import {
+  classifyTask,
+  createRoutingService,
+  installRouting,
+} from "./plugin.ts";
 
 describe("sovereign-ai plugin skeleton", () => {
   it("renders the status command response from config", () => {
@@ -15,9 +19,9 @@ describe("sovereign-ai plugin skeleton", () => {
   });
 
   it("registers the load-proof command", () => {
-    let registered:
-      | Parameters<Parameters<typeof apply>[0]["commands"]["register"]>[0]
-      | undefined;
+    const registered: Parameters<
+      Parameters<typeof apply>[0]["commands"]["register"]
+    >[0][] = [];
     const ctx = {
       commands: {
         register(
@@ -25,10 +29,8 @@ describe("sovereign-ai plugin skeleton", () => {
             Parameters<typeof apply>[0]["commands"]["register"]
           >[0],
         ) {
-          registered = definition;
-          return () => {
-            registered = undefined;
-          };
+          registered.push(definition);
+          return () => {};
         },
       },
       llm: { registerAdapter: () => () => {} },
@@ -38,12 +40,19 @@ describe("sovereign-ai plugin skeleton", () => {
 
     apply(ctx, { version: "0.2.0", mode: "demo" });
 
-    expect(registered?.name).toBe("sovereignty-status");
-    expect(registered?.description).toBe(
+    expect(registered.map((definition) => definition.name)).toEqual([
+      "sovereign-status",
+      "sovereignty-status",
+      "sovereignty-audit",
+    ]);
+    const sovereigntyStatus = registered.find(
+      (definition) => definition.name === "sovereignty-status",
+    );
+    expect(sovereigntyStatus?.description).toBe(
       "show application-observed Sovereign network status",
     );
-    expect(registered?.recordInput).toBe(false);
-    expect(registered?.handler({ rawInput: "" })).toEqual({
+    expect(sovereigntyStatus?.recordInput).toBe(false);
+    expect(registered[0]?.handler({ rawInput: "" })).toEqual({
       kind: "success",
       text: [
         "Sovereign AI plugin loaded.",

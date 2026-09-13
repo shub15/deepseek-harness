@@ -2,8 +2,8 @@ import { appendFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import type { Context } from "@deepseek-ai/cordis";
 import type {} from "@deepseek-ai/dsh-session";
-import type { RoutingDecision } from "./routing.js";
-import type { SovereigntyMonitor } from "./sovereignty.js";
+import type { RoutingDecision } from "../router/router.js";
+import type { SovereigntyMonitor } from "../sovereignty/monitor.js";
 
 export interface AuditConfig {
   path?: string;
@@ -20,7 +20,11 @@ export interface AuditEntry {
 
 export interface AuditTraceService {
   readonly record: (
-    entry: Omit<AuditEntry, "timestamp"> & { timestamp?: number },
+    entry: Omit<AuditEntry, "timestamp" | "sessionId" | "sequence"> & {
+      timestamp?: number | undefined;
+      sessionId?: string | undefined;
+      sequence?: number | undefined;
+    },
   ) => void;
   readonly list: () => readonly AuditEntry[];
   readonly clear: () => void;
@@ -67,7 +71,11 @@ export function createAuditTrace(config: AuditConfig = {}): AuditTraceService {
   let entries: AuditEntry[] = [];
   let write: Promise<void> = Promise.resolve();
   const record = (
-    input: Omit<AuditEntry, "timestamp"> & { timestamp?: number },
+    input: Omit<AuditEntry, "timestamp" | "sessionId" | "sequence"> & {
+      timestamp?: number | undefined;
+      sessionId?: string | undefined;
+      sequence?: number | undefined;
+    },
   ): void => {
     const entry: AuditEntry = {
       timestamp: input.timestamp ?? Date.now(),
@@ -186,7 +194,7 @@ export function installAuditTrace(
     }
   });
   ctx.on("sovereign/routing-decision", (decision) => {
-    audit.record({ eventType: "model/routing", metadata: decision });
+    audit.record({ eventType: "model/routing", metadata: { ...decision } });
   });
   ctx.on("sovereign/network-blocked", (url, kind) => {
     audit.record({ eventType: "network/blocked", metadata: { url, kind } });

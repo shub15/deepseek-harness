@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Context } from "@deepseek-ai/cordis";
 import { defineTool } from "@deepseek-ai/dsh-tools";
-import type { SovereigntyMonitor } from "./sovereignty.js";
+import type { SovereigntyMonitor } from "../sovereignty/monitor.js";
 
 export interface RagConfig {
   knowledgeBaseDirectory: string;

@@ -1,19 +1,18 @@
 # sovereign-ai/cordis.patch.yml
 #
 # Applied as ONE insert over the profile root when the user runs:
-#   dsh plugin --profile sovereign add ./sovereign-ai
+#   dsh plugin --profile sovereign add ./sovereign
 #
 # Row order carries no load semantics (activation is service-availability
 # driven). Later bundle patches and the user's profile cordis.patch.yml can
 # override these rows by id, with the last write winning per row.
 #
 #   sovereign-llm-local    - local OpenAI-compatible model adapters
-#   sovereign-tool-ocr     - OCR / document extraction tool  (Phase 3)
-#   sovereign-tool-rag     - local RAG tool                  (Phase 3)
-#   sovereign-monitor      - sovereignty + network monitor   (Phase 4)
-#   sovereign-client-ui    - Web UI badge + panel            (Phase 5)
-#
-# Phase 1: skeleton only - one status-command row proves the bundle loads.
+#    - id: sovereign-tool-ocr     - local OCR / document extraction tools
+#    - id: sovereign-tool-rag     - local RAG tool and embedding route
+#    - id: sovereign-monitor      - local-only network policy
+#    - id: sovereign-audit        - compact local audit trace
+#    - id: sovereign-client-ui    - Web UI status and trace panel
 
 - insert:
     - id: sovereign-status
@@ -21,8 +20,42 @@
       inject: [commands, llm, tools]
       config:
         version: "0.1.0"
-        mode: "development"
-        localModels: []
+        mode: "sovereign-local"
+        localModels:
+          - id: coding
+            baseUrl: "http://127.0.0.1:8000/v1"
+            model: "local-coding"
+            capabilities: [coding, general]
+            priority: 20
+          - id: reasoning-document
+            baseUrl: "http://127.0.0.1:8001/v1"
+            model: "local-reasoning-document"
+            capabilities: [reasoning, document, long_context, general]
+            priority: 20
+          - id: vision
+            baseUrl: "http://127.0.0.1:8002/v1"
+            model: "local-vision"
+            capabilities: [vision, general]
+            priority: 10
+            available: true
+        rag:
+          knowledgeBaseDirectory: !!js process.cwd() + '/sovereign-kb'
+          databasePath: !!js process.cwd() + '/sovereign-data/rag.sqlite'
+          embeddingBaseUrl: "http://127.0.0.1:8001/v1"
+          embeddingModel: "local-embedding"
+          chunkSize: 800
+          chunkOverlap: 120
+          resultLimit: 5
+        documentTools:
+          ocrCommand: "tesseract {input} stdout"
+          maxPages: 200
+          maxCharacters: 50000
+        artifactTools:
+          workspaceDirectory: !!js process.cwd()
+          outputDirectory: "sovereign-output"
+        audit:
+          path: !!js process.cwd() + '/sovereign-data/audit.jsonl'
+          maxEntries: 1000
     - id: sovereign-client-ui
       name: "@sovereign-ai/dsh-plugin"
       inject: [slots, sessions, locale]

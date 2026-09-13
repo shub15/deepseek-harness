@@ -1,0 +1,7 @@
+# Paths are resolved relative to the profile working directory.
+knowledgeBaseDirectory: ./sovereign-kb
+databasePath: ./sovereign-data/rag.sqlite
+workspaceDirectory: .
+outputDirectory: ./sovereign-output
+auditPath: ./sovereign-data/audit.jsonl
+ocrCommand: tesseract {input} stdout

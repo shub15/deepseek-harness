@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { createAuditTrace, installAuditTrace } from "./audit.ts";
+import { createAuditTrace, installAuditTrace } from "./trace.ts";
 
 describe("sovereign audit trace", () => {
   it("replays compact session and plugin events without storing model content", () => {
     const audit = createAuditTrace();
-    const listeners: Record<string, (...args: never[]) => void> = {};
+    const listeners: Record<string, (...args: unknown[]) => void> = {};
     const emitted: Array<{ event: string; args: unknown[] }> = [];
     const context = {
       provide: () => () => {},
-      on: (event: string, listener: (...args: never[]) => void) => {
+      on: (event: string, listener: (...args: unknown[]) => void) => {
         listeners[event] = listener;
         return () => {};
       },

@@ -25,5 +25,5 @@
       ]
     }
   },
-  "include": ["src/client.tsx", "src/client-state.ts"]
+  "include": ["src/client.tsx", "src/ui/index.tsx", "src/ui/state.ts"]
 }

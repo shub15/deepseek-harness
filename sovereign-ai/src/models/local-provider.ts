@@ -9,7 +9,7 @@ import type {
   TokenUsage,
   ToolCallId,
 } from "@deepseek-ai/dsh-llm";
-import type { SovereigntyMonitor } from "./sovereignty.js";
+import type { SovereigntyMonitor } from "../sovereignty/monitor.js";
 
 export interface LocalModelEndpoint {
   id: string;

@@ -1,8 +1,8 @@
 import type { Context } from "@deepseek-ai/cordis";
 import { LlmError } from "@deepseek-ai/dsh-llm";
 import type { GenerateOptions, Message } from "@deepseek-ai/dsh-llm";
-import type { LocalModelEndpoint } from "./local-models.js";
-import { routeFor } from "./local-models.js";
+import type { LocalModelEndpoint } from "../models/local-provider.js";
+import { routeFor } from "../models/local-provider.js";
 
 export type ModelCapability =
   | "coding"

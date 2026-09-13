@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createSovereigntyMonitor,
   renderSovereigntyStatus,
-} from "./sovereignty.ts";
+} from "./monitor.ts";
 
 describe("sovereignty monitor", () => {
   it("allows configured local model endpoints", () => {

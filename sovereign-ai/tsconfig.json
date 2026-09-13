@@ -26,5 +26,5 @@
     "types": ["node"],
     "ignoreDeprecations": "6.0"
   },
-  "include": ["src/index.ts"]
+  "include": ["src/index.ts", "src/plugin.ts"]
 }
